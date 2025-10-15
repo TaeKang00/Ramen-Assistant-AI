@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>라면 비서</title>
+<style>
+  :root{--bg:#0b1220;--panel:#0f172a;--card:#111827;--muted:#334155;--txt:#e2e8f0;--me:#22c55e;--accent:#38bdf8}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:Pretendard,system-ui,Apple SD Gothic Neo,Segoe UI,Roboto,Helvetica,Arial,sans-serif;display:flex;justify-content:center}
+  .app{width:100%;max-width:720px;min-height:100dvh;display:flex;flex-direction:column}
+  header{padding:16px 20px;background:var(--card);border-bottom:1px solid #1f2937;position:sticky;top:0;z-index:5}
+  header h1{margin:0;font-size:18px}
+  .chat{flex:1;overflow:auto;padding:16px 12px 210px;background:var(--panel)}
+  .msg{display:flex;margin:10px 0}
+  .msg .bubble{max-width:78%;background:var(--muted);padding:12px 14px;border-radius:16px;line-height:1.45}
+  .msg.me{justify-content:flex-end}
+  .msg.me .bubble{background:var(--me);color:#0b1220}
+  footer{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid #1f2937;padding:12px}
+  .inputbar{max-width:720px;margin:0 auto;display:flex;gap:10px}
+  input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid #334155;background:var(--bg);color:var(--txt)}
+  button{padding:12px 18px;border-radius:12px;border:0;background:var(--me);color:#0b1220;font-weight:700;cursor:pointer}
+  .hint{max-width:720px;margin:6px auto 0;opacity:.7;font-size:12px;text-align:center}
+
+  .picker{padding:10px 12px;background:#0b1220;border-bottom:1px solid #1f2937;position:sticky;top:56px;z-index:4}
+  .row{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{margin:4px 0;padding:8px 12px;border-radius:999px;border:1px solid #334155;background:transparent;color:var(--txt);cursor:pointer;font-size:13px}
+  .chip:hover{background:#0f172a}
+  .chip.active{background:#0f172a}
+  .chips-box .chip{padding:6px 10px;font-size:12px}
+
+  .dots{display:inline-block;width:1.5em;text-align:left}
+  .dots::after{content:'…';animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:.3}}
+
+  .ctrls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .ctrls button{padding:7px 12px;font-size:12px;border-radius:999px;border:1px solid #334155;background:transparent;color:var(--txt);cursor:pointer}
+  .ctrls button:hover{background:#0f172a}
+
+  .meter{height:6px;background:#0b1220;border:1px solid #1f2937;border-radius:999px;overflow:hidden;margin-top:8px}
+  .meter>i{display:block;height:100%;background:var(--accent);width:0%}
+
+  .muted{opacity:.8}
+  .hidden{display:none!important}
+
+  /* sticky mini timer */
+  .sticky-timer{
+    position:fixed;left:0;right:0;bottom:78px;margin:auto;max-width:720px;
+    display:flex;align-items:center;gap:16px;background:var(--card);color:var(--txt);
+    border:1px solid #1f2937;border-radius:14px;padding:12px 20px;z-index:6;
+    box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:14px
+  }
+  .sticky-timer.hidden{display:none!important}
+  .sticky-timer .name{font-weight:700}
+  .sticky-timer .left{font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+  .sticky-timer .meter{flex:1;height:6px;margin:0 4px}
+  .sticky-timer .mini-btn{padding:10px 16px;font-size:13px;border-radius:999px;border:1px solid #334155;background:transparent;color:var(--txt);cursor:pointer}
+  .sticky-timer .mini-btn:hover{background:#0f172a}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><h1>🍜 라면 AI 비서</h1></header>
+
+  <div class="picker">
+    <div style="font-size:13px;opacity:.8;margin-bottom:6px">브랜드를 선택해 주세요</div>
+    <div id="brandRow" class="row"></div>
+    <div id="ramenBlock" style="margin-top:10px;display:none">
+      <div style="font-size:13px;opacity:.8;margin-bottom:6px"><span id="brandTitle"></span> 라면 선택</div>
+      <div id="ramenRow" class="row"></div>
+    </div>
+  </div>
+
+  <div id="chat" class="chat"></div>
+
+  <footer>
+    <div class="inputbar">
+      <input id="inp" placeholder="예: 신라면 4:30 / 컵라면 3분인데 2분50초만" />
+      <button id="send">전송</button>
+    </div>
+  </footer>
+</div>
+
+<!-- sticky mini timer -->
+<div id="stickyTimer" class="sticky-timer hidden">
+  <span class="name">라면</span>
+  <span class="left">0:00</span>
+  <div class="meter"><i></i></div>
+  <button id="stExtend"  class="mini-btn">+1분</button>
+  <button id="stStop"    class="mini-btn">정지</button>
+  <button id="stCancel"  class="mini-btn">취소</button>
+  <button id="stRestart" class="mini-btn hidden">재시작</button>
+</div>
+
+<audio id="ding"><source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA" type="audio/mp3"></audio>
+
+<script>
+const chat = document.getElementById('chat');
+const inp = document.getElementById('inp');
+const sendBtn = document.getElementById('send');
+const ding = document.getElementById('ding');
+
+const brandRow = document.getElementById('brandRow');
+const ramenBlock = document.getElementById('ramenBlock');
+const ramenRow = document.getElementById('ramenRow');
+const brandTitle = document.getElementById('brandTitle');
+
+/* sticky */
+const sticky = document.getElementById('stickyTimer');
+const stName  = sticky.querySelector('.name');
+const stLeft  = sticky.querySelector('.left');
+const stBar   = sticky.querySelector('.meter > i');
+const stExtend= document.getElementById('stExtend');
+const stStop  = document.getElementById('stStop');
+const stCancel= document.getElementById('stCancel');
+const stRestart=document.getElementById('stRestart');
+
+function showSticky(name){ stName.textContent=name; sticky.classList.remove('hidden'); }
+function hideSticky(){ sticky.classList.add('hidden'); }
+/* ← 남은시간과 전체시간을 받아 내부에서 % 계산 */
+function updateSticky(leftSec, totalSec){
+  const per = totalSec>0 ? (1 - leftSec/totalSec)*100 : 100;
+  stLeft.textContent = formatMMSS(leftSec);
+  stBar.style.width = Math.max(0, Math.min(100, per)) + '%';
+}
+
+function addMsg(html, who='bot'){
+  const w = document.createElement('div');
+  w.className = `msg ${who}`;
+  w.innerHTML = `<div class="bubble">${html}</div>`;
+  chat.appendChild(w); chat.scrollTop = chat.scrollHeight;
+  return w;
+}
+function typing(on=true){
+  let t = document.getElementById('typing');
+  if(on){
+    if(t) return;
+    const w = document.createElement('div');
+    w.className = 'msg'; w.id = 'typing';
+    w.innerHTML = `<div class="bubble"><span class="dots"></span></div>`;
+    chat.appendChild(w);
+  }else t?.remove();
+  chat.scrollTop = chat.scrollHeight;
+}
+function renderChips(items=[]){
+  if(!items.length) return;
+  const box = addMsg(`<div class="chips-box">${items.map(s=>`<button class="chip">${s}</button>`).join(' ')}</div>`);
+  box.querySelectorAll('.chip').forEach(btn=>{
+    btn.onclick = ()=> { inp.value = btn.textContent; sendBtn.click(); };
+  });
+}
+async function apiParse(text){
+  const r = await fetch('/api/parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+  const data = await r.json(); if(!r.ok) throw new Error(data?.error||'server'); return data;
+}
+
+/* 타이머 상태 */
+let currentTimer = null;
+let lastTimerPreset = null;   // { name, seconds }
+let pausedSnapshot = null;    // { name, left, total }
+
+function formatMMSS(sec){
+  const m = Math.floor(sec/60), s = sec%60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function updateCountdown(){
+  if(!currentTimer) return;
+  const now = Date.now();
+  const left = Math.max(0, Math.round((currentTimer.endAt - now)/1000));
+  const total = currentTimer.secsTotal;
+  const status = currentTimer.bubbleEl.querySelector('.status');
+  const bar = currentTimer.bubbleEl.querySelector('.meter > i');
+
+  status.innerHTML = `⏱️ <b>${currentTimer.name}</b> 남은 시간 <b>${formatMMSS(left)}</b>`;
+  const per = Math.max(0, Math.min(100, (1 - left/total)*100));
+  bar.style.width = per + '%';
+
+  updateSticky(left, total);
+
+  if(left <= 0) finishTimer();
+  else currentTimer.tickHandle = setTimeout(updateCountdown, 250);
+}
+
+function hideActiveCtrls(b){
+  b.querySelector('#btnStop')?.classList.add('hidden');
+  b.querySelector('#btnExtend')?.classList.add('hidden');
+  b.querySelector('#btnCancel')?.classList.add('hidden');
+  b.querySelector('#btnChange')?.classList.add('hidden');
+}
+function showRestartCtrls(b){
+  const ctrls = b.querySelector('.ctrls');
+  let btn = ctrls.querySelector('#btnRestart');
+  if(!btn){
+    btn = document.createElement('button');
+    btn.id = 'btnRestart';
+    btn.textContent = '재시작';
+    btn.onclick = doRestartFromSnapshot;
+    ctrls.prepend(btn);
+  }else btn.classList.remove('hidden');
+}
+
+/* ▌정지(일시중지) : 진행바/남은시간 그대로 유지 */
+function pauseTimer(reason='정지했어요'){
+  if(!currentTimer) return;
+  const now  = Date.now();
+  const left = Math.max(0, Math.round((currentTimer.endAt - now)/1000));
+  const total= currentTimer.secsTotal;
+
+  pausedSnapshot = { name: currentTimer.name, left, total };
+
+  clearTimeout(currentTimer.handle);
+  clearTimeout(currentTimer.tickHandle);
+
+  const b = currentTimer.bubbleEl;
+  b.querySelector('.status').innerHTML = `⏸️ <b>${currentTimer.name}</b> ${reason}`;
+  hideActiveCtrls(b); showRestartCtrls(b);
+
+  // sticky에 멈춘 위치 유지 표시
+  updateSticky(left, total);
+  stStop.classList.add('hidden');
+  stExtend.classList.add('hidden');
+  stCancel.classList.remove('hidden');
+  stRestart.classList.remove('hidden');
+
+  currentTimer = null; // 루프 중지
+}
+
+/* ✖ 취소(완전 종료) : 리셋 */
+function cancelTimerHard(reason='취소했어요'){
+  if(currentTimer){
+    clearTimeout(currentTimer.handle);
+    clearTimeout(currentTimer.tickHandle);
+    const b = currentTimer.bubbleEl;
+    b.querySelector('.status').innerHTML = `⛔ <b>${currentTimer.name}</b> ${reason}`;
+    hideActiveCtrls(b);
+  }
+  currentTimer = null;
+  pausedSnapshot = null;    // 재시작 불가
+  hideSticky();
+
+  stStop.classList.remove('hidden');
+  stExtend.classList.remove('hidden');
+  stRestart.classList.add('hidden');
+}
+
+function extendTimer(sec=60){
+  if(!currentTimer) return;
+  const now = Date.now();
+  currentTimer.endAt = Math.max(now, currentTimer.endAt) + sec*1000;
+  currentTimer.secsTotal += sec;
+  clearTimeout(currentTimer.tickHandle);
+  updateCountdown();
+}
+
+function finishTimer(){
+  if(!currentTimer) return;
+  addMsg(`✅ <b>${currentTimer.name}</b> 다 됐어요! 불기 전에 건져요 🍜`);
+  try{ ding.currentTime=0; ding.play().catch(()=>{});}catch(e){}
+  // 완료 시에도 마지막 상태를 보여주되 0초/100%로 고정
+  updateSticky(0, 1);
+  stStop.classList.add('hidden');
+  stExtend.classList.add('hidden');
+  stRestart.classList.remove('hidden');
+  pausedSnapshot = null;
+  currentTimer = null;
+}
+
+function startTimer(name, seconds){
+  if(currentTimer) cancelTimerHard('이전 타이머를 종료했어요');
+
+  lastTimerPreset = { name, seconds };
+
+  const b = addMsg(`
+    <div class="status muted">⏱️ <b>${name}</b> 타이머 시작 — ${formatMMSS(seconds)}</div>
+    <div class="meter"><i></i></div>
+    <div class="ctrls">
+      <button id="btnStop">정지</button>
+      <button id="btnExtend">1분 연장</button>
+      <button id="btnCancel">취소</button>
+      <button id="btnChange">라면 바꾸기</button>
+    </div>
+  `);
+
+  b.querySelector('#btnStop').onclick   = ()=> pauseTimer();
+  b.querySelector('#btnExtend').onclick = ()=> extendTimer(60);
+  b.querySelector('#btnCancel').onclick = ()=> cancelTimerHard();
+  b.querySelector('#btnChange').onclick = ()=> { cancelTimerHard('변경합니다'); window.scrollTo({top:0, behavior:'smooth'}); };
+
+  const endAt = Date.now() + seconds*1000;
+  currentTimer = { id: Math.random().toString(36).slice(2),
+    name, endAt,
+    handle: setTimeout(()=>finishTimer(), seconds*1000),
+    bubbleEl: b, secsTotal: seconds, tickHandle: null };
+
+  showSticky(name);
+  stExtend.onclick = ()=> extendTimer(60);
+  stStop.onclick   = ()=> pauseTimer();
+  stCancel.onclick = ()=> cancelTimerHard();
+  stRestart.onclick= ()=> doRestartFromSnapshot();
+
+  stRestart.classList.add('hidden');
+  stStop.classList.remove('hidden');
+  stExtend.classList.remove('hidden');
+  stCancel.classList.remove('hidden');
+
+  updateCountdown();
+}
+
+/* ▶ 재시작: 정지 스냅샷 우선 사용 */
+function doRestartFromSnapshot(){
+  const name = (pausedSnapshot?.name) || (lastTimerPreset?.name) || '라면';
+  const sec  = (pausedSnapshot?.left ?? lastTimerPreset?.seconds ?? 180);
+  pausedSnapshot = null;
+  startTimer(name, sec);
+}
+
+/* 입력 */
+async function handleUser(text){
+  addMsg(text,'me');
+  typing(true);
+  try{
+    const d = await apiParse(text);
+    typing(false);
+    if(d.reply) addMsg(d.reply);
+    if(Array.isArray(d.suggestions) && d.suggestions.length) renderChips(d.suggestions.slice(0,4));
+    if(d.should_start && d?.name && d?.seconds) startTimer(d.name, d.seconds);
+  }catch(e){
+    typing(false); addMsg('서버 연결 오류 ❌');
+  }
+}
+sendBtn.onclick=()=>{const t=inp.value.trim();if(!t)return;handleUser(t);inp.value='';};
+inp.addEventListener('keydown',e=>{if(e.key==='Enter')sendBtn.click();});
+
+/* 브랜드/라면 */
+let CATALOG=null, SELECTED_BRAND=null;
+function renderBrands(){
+  brandRow.innerHTML='';
+  Object.keys(CATALOG).forEach(b=>{
+    const btn=document.createElement('button');
+    btn.className='chip'; btn.textContent=b;
+    btn.onclick=()=>{
+      if(SELECTED_BRAND===b && ramenBlock.style.display!=='none'){
+        ramenBlock.style.display='none'; SELECTED_BRAND=null;
+        [...brandRow.children].forEach(c=>c.classList.remove('active')); return;
+      }
+      SELECTED_BRAND=b; renderRamen(b);
+      ramenBlock.style.display='block';
+      [...brandRow.children].forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    brandRow.appendChild(btn);
+  });
+}
+function renderRamen(b){
+  ramenBlock.style.display='block'; brandTitle.textContent=b;
+  ramenRow.innerHTML='';
+  CATALOG[b].forEach(it=>{
+    const btn=document.createElement('button');
+    btn.className='chip';
+    btn.textContent=`${it.name} (${it.time})`;
+    btn.onclick=()=> handleUser(`${it.name} ${it.time}`);
+    ramenRow.appendChild(btn);
+  });
+}
+async function loadCatalog(){
+  try{
+    const r=await fetch('/api/catalog'); const { catalog }=await r.json();
+    CATALOG=catalog; renderBrands();
+  }catch(e){ console.error(e); }
+}
+
+/* init */
+addMsg('안녕하세요! 저는 🍜 라면 AI 비서예요. 먼저 <b>브랜드</b>를 고르거나, 아래에 “신라면 4:30”처럼 말해보세요.');
+if("Notification" in window){ try{ Notification.requestPermission(); }catch(e){} }
+loadCatalog();
+</script>
+</body>
+</html>
