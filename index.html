@@ -5,68 +5,288 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>라면 비서</title>
 <style>
-  :root{--bg:#0b1220;--panel:#0f172a;--card:#111827;--muted:#334155;--txt:#e2e8f0;--me:#22c55e;--accent:#38bdf8}
+  :root{
+    --bg:#0b1220;
+    --panel:#0f172a;
+    --card:#111827;
+    --muted:#334155;
+    --txt:#e2e8f0;
+    --me:#22c55e;
+    --accent:#38bdf8;
+    --header-h:56px;
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--txt);font-family:Pretendard,system-ui,Apple SD Gothic Neo,Segoe UI,Roboto,Helvetica,Arial,sans-serif;display:flex;justify-content:center}
-  .app{width:100%;max-width:720px;min-height:100dvh;display:flex;flex-direction:column}
-  header{padding:16px 20px;background:var(--card);border-bottom:1px solid #1f2937;position:sticky;top:0;z-index:5}
-  header h1{margin:0;font-size:18px}
-  .chat{flex:1;overflow:auto;padding:16px 12px 210px;background:var(--panel)}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--txt);
+    font-family:Pretendard,system-ui,Apple SD Gothic Neo,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    display:flex;
+    justify-content:center;
+  }
+  .app{
+    width:100%;
+    max-width:720px;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    padding:12px 16px;
+    background:var(--card);
+    border-bottom:1px solid #1f2937;
+    position:sticky;
+    top:0;
+    z-index:5;
+  }
+  header h1{margin:0;font-size:18px;line-height:1.2}
+
+  .chat{
+    flex:1;
+    overflow:auto;
+    padding:16px 12px 210px;
+    background:var(--panel);
+  }
   .msg{display:flex;margin:10px 0}
-  .msg .bubble{max-width:78%;background:var(--muted);padding:12px 14px;border-radius:16px;line-height:1.45}
+  .msg .bubble{
+    max-width:78%;
+    background:var(--muted);
+    padding:12px 14px;
+    border-radius:16px;
+    line-height:1.45;
+  }
   .msg.me{justify-content:flex-end}
   .msg.me .bubble{background:var(--me);color:#0b1220}
-  footer{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid #1f2937;padding:12px}
-  .inputbar{max-width:720px;margin:0 auto;display:flex;gap:10px}
-  input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid #334155;background:var(--bg);color:var(--txt)}
-  button{padding:12px 18px;border-radius:12px;border:0;background:var(--me);color:#0b1220;font-weight:700;cursor:pointer}
-  .hint{max-width:720px;margin:6px auto 0;opacity:.7;font-size:12px;text-align:center}
 
-  .picker{padding:10px 12px;background:#0b1220;border-bottom:1px solid #1f2937;position:sticky;top:56px;z-index:4}
-  .row{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{margin:4px 0;padding:8px 12px;border-radius:999px;border:1px solid #334155;background:transparent;color:var(--txt);cursor:pointer;font-size:13px}
+  footer{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    background:var(--bg);
+    border-top:1px solid #1f2937;
+    padding:10px 8px;
+  }
+  .inputbar{
+    max-width:720px;
+    margin:0 auto;
+    display:flex;
+    gap:8px;
+  }
+  input{
+    flex:1;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--muted);
+    background:var(--bg);
+    color:var(--txt);
+    font-size:13px;
+  }
+  button{
+    padding:10px 16px;
+    border-radius:12px;
+    border:0;
+    background:var(--me);
+    color:#0b1220;
+    font-weight:700;
+    cursor:pointer;
+    font-size:13px;
+  }
+
+  /* 상단 선택 영역 */
+  .picker{
+    padding:8px 12px;
+    background:#0b1220;
+    border-bottom:1px solid #1f2937;
+    position:sticky;
+    top:var(--header-h);
+    z-index:4;
+  }
+  .row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .chip{
+    margin:4px 0;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid var(--muted);
+    background:transparent;
+    color:var(--txt);
+    cursor:pointer;
+    font-size:13px;
+  }
   .chip:hover{background:#0f172a}
   .chip.active{background:#0f172a}
-  .chips-box .chip{padding:6px 10px;font-size:12px}
+
+  .chips-box .chip{
+    padding:6px 10px;
+    font-size:12px;
+  }
 
   .dots{display:inline-block;width:1.5em;text-align:left}
   .dots::after{content:'…';animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:.3}}
 
-  .ctrls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-  .ctrls button{padding:7px 12px;font-size:12px;border-radius:999px;border:1px solid #334155;background:transparent;color:var(--txt);cursor:pointer}
+  .ctrls{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+  .ctrls button{
+    padding:7px 12px;
+    font-size:12px;
+    border-radius:999px;
+    border:1px solid var(--muted);
+    background:transparent;
+    color:var(--txt);
+    cursor:pointer;
+    font-weight:500;
+  }
   .ctrls button:hover{background:#0f172a}
 
-  .meter{height:6px;background:#0b1220;border:1px solid #1f2937;border-radius:999px;overflow:hidden;margin-top:8px}
-  .meter>i{display:block;height:100%;background:var(--accent);width:0%}
+  .meter{
+    height:6px;
+    background:#0b1220;
+    border:1px solid #1f2937;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:8px;
+  }
+  .meter>i{
+    display:block;
+    height:100%;
+    background:var(--accent);
+    width:0%;
+    transition:width .15s linear;
+  }
 
   .muted{opacity:.8}
   .hidden{display:none!important}
 
-  /* sticky mini timer */
+  /* Sticky mini timer */
   .sticky-timer{
-    position:fixed;left:0;right:0;bottom:78px;margin:auto;max-width:720px;
-    display:flex;align-items:center;gap:16px;background:var(--card);color:var(--txt);
-    border:1px solid #1f2937;border-radius:14px;padding:12px 20px;z-index:6;
-    box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:14px
+    position:fixed;
+    left:0;right:0;bottom:78px;
+    margin:auto;
+    max-width:720px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--card);
+    color:var(--txt);
+    border:1px solid #1f2937;
+    border-radius:14px;
+    padding:10px 14px;
+    z-index:6;
+    box-shadow:0 4px 20px rgba(0,0,0,.3);
+    font-size:13px;
   }
   .sticky-timer.hidden{display:none!important}
   .sticky-timer .name{font-weight:700}
-  .sticky-timer .left{font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
-  .sticky-timer .meter{flex:1;height:6px;margin:0 4px}
-  .sticky-timer .mini-btn{padding:10px 16px;font-size:13px;border-radius:999px;border:1px solid #334155;background:transparent;color:var(--txt);cursor:pointer}
+  .sticky-timer .left{
+    font-variant-numeric:tabular-nums;
+    min-width:52px;
+    text-align:right;
+  }
+  .sticky-timer .meter{
+    flex:1;
+    height:6px;
+    margin:0 4px;
+  }
+  .sticky-timer .mini-btn{
+    padding:8px 12px;
+    font-size:12px;
+    border-radius:999px;
+    border:1px solid var(--muted);
+    background:transparent;
+    color:var(--txt);
+    cursor:pointer;
+  }
   .sticky-timer .mini-btn:hover{background:#0f172a}
+
+  /* 모바일 최적화 */
+  @media (max-width:480px){
+    header{
+      padding:10px 10px;
+    }
+    header h1{
+      font-size:16px;
+    }
+    .picker{
+      padding:6px 8px;
+    }
+    .chat{
+      padding:10px 8px 170px;
+    }
+    .msg .bubble{
+      max-width:82%;
+      padding:10px 11px;
+      font-size:13px;
+    }
+    .chip{
+      padding:6px 10px;
+      font-size:12px;
+    }
+    footer{
+      padding:8px 6px;
+    }
+    .inputbar{
+      gap:6px;
+    }
+    input{
+      padding:9px 10px;
+      font-size:12px;
+    }
+    button{
+      padding:9px 12px;
+      font-size:12px;
+    }
+    .sticky-timer{
+      bottom:64px;
+      padding:8px 10px;
+      gap:8px;
+      font-size:12px;
+    }
+    .sticky-timer .mini-btn{
+      padding:6px 8px;
+      font-size:11px;
+    }
+  }
 </style>
 </head>
 <body>
 <div class="app">
-  <header><h1>🍜 라면 AI 비서</h1></header>
+  <header>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <h1>🍜 라면 AI 비서</h1>
+      <!-- 언어 토글 -->
+      <div id="langToggle"
+           style="display:flex;gap:4px;font-size:12px;background:#020617;border-radius:999px;padding:2px;border:1px solid #1f2937">
+        <button data-lang="ko"
+                style="border:0;background:transparent;color:#e5e7eb;padding:4px 10px;border-radius:999px;cursor:pointer;font-size:12px">
+          KR
+        </button>
+        <button data-lang="en"
+                style="border:0;background:transparent;color:#9ca3af;padding:4px 10px;border-radius:999px;cursor:pointer;font-size:12px">
+          EN
+        </button>
+      </div>
+    </div>
+  </header>
 
   <div class="picker">
-    <div style="font-size:13px;opacity:.8;margin-bottom:6px">브랜드를 선택해 주세요</div>
+    <div id="brandLabel" style="font-size:13px;opacity:.8;margin-bottom:6px">
+      브랜드를 선택해 주세요
+    </div>
+
     <div id="brandRow" class="row"></div>
+
     <div id="ramenBlock" style="margin-top:10px;display:none">
-      <div style="font-size:13px;opacity:.8;margin-bottom:6px"><span id="brandTitle"></span> 라면 선택</div>
+      <div style="font-size:13px;opacity:.8;margin-bottom:6px">
+        <span id="brandTitle"></span>
+        <span id="ramenLabelText"> 라면 선택</span>
+      </div>
       <div id="ramenRow" class="row"></div>
     </div>
   </div>
@@ -92,43 +312,253 @@
   <button id="stRestart" class="mini-btn hidden">재시작</button>
 </div>
 
-<audio id="ding"><source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA" type="audio/mp3"></audio>
+<audio id="ding">
+  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA" type="audio/mp3">
+</audio>
 
 <script>
-const chat = document.getElementById('chat');
-const inp = document.getElementById('inp');
-const sendBtn = document.getElementById('send');
-const ding = document.getElementById('ding');
+/* DOM */
+const chat   = document.getElementById('chat');
+const inp    = document.getElementById('inp');
+const sendBtn= document.getElementById('send');
+const ding   = document.getElementById('ding');
 
-const brandRow = document.getElementById('brandRow');
-const ramenBlock = document.getElementById('ramenBlock');
-const ramenRow = document.getElementById('ramenRow');
-const brandTitle = document.getElementById('brandTitle');
+const brandRow  = document.getElementById('brandRow');
+const ramenBlock= document.getElementById('ramenBlock');
+const ramenRow  = document.getElementById('ramenRow');
+const brandTitle= document.getElementById('brandTitle');
+const ramenLabelText = document.getElementById('ramenLabelText');
+const brandLabel = document.getElementById('brandLabel');
 
 /* sticky */
-const sticky = document.getElementById('stickyTimer');
-const stName  = sticky.querySelector('.name');
-const stLeft  = sticky.querySelector('.left');
-const stBar   = sticky.querySelector('.meter > i');
-const stExtend= document.getElementById('stExtend');
-const stStop  = document.getElementById('stStop');
-const stCancel= document.getElementById('stCancel');
-const stRestart=document.getElementById('stRestart');
+const sticky   = document.getElementById('stickyTimer');
+const stName   = sticky.querySelector('.name');
+const stLeft   = sticky.querySelector('.left');
+const stBar    = sticky.querySelector('.meter > i');
+const stExtend = document.getElementById('stExtend');
+const stStop   = document.getElementById('stStop');
+const stCancel = document.getElementById('stCancel');
+const stRestart= document.getElementById('stRestart');
+const langToggle = document.getElementById('langToggle');
+const headerEl = document.querySelector('header');
 
-function showSticky(name){ stName.textContent=name; sticky.classList.remove('hidden'); }
-function hideSticky(){ sticky.classList.add('hidden'); }
-/* ← 남은시간과 전체시간을 받아 내부에서 % 계산 */
-function updateSticky(leftSec, totalSec){
-  const per = totalSec>0 ? (1 - leftSec/totalSec)*100 : 100;
-  stLeft.textContent = formatMMSS(leftSec);
-  stBar.style.width = Math.max(0, Math.min(100, per)) + '%';
+/* 헤더 높이에 맞춰 picker top 보정 */
+function updateHeaderHeight(){
+  if(!headerEl) return;
+  const h = headerEl.getBoundingClientRect().height;
+  document.documentElement.style.setProperty('--header-h', h + 'px');
 }
 
+/* 언어 토글 활성/비활성 */
+function setLangToggleDisabled(disabled){
+  if(!langToggle) return;
+  if(disabled){
+    langToggle.style.pointerEvents = 'none';
+    langToggle.style.opacity = '0.4';
+  }else{
+    langToggle.style.pointerEvents = '';
+    langToggle.style.opacity = '1';
+  }
+}
+
+/* 다국어 텍스트 */
+const copy = {
+  ko: {
+    header: '🍜 라면 AI 비서',
+    pickerBrandLabel: '브랜드를 선택해 주세요',
+    pickerRamenKeyword: '라면 선택',
+    inputPlaceholder: '예: 신라면 4:30 / 컵라면 3분인데 2분50초만',
+    firstMessage: '안녕하세요! 저는 🍜 라면 AI 비서예요. 먼저 <b>브랜드</b>를 고르거나, 아래에 “신라면 4:30”처럼 말해보세요.',
+    stickyName: '라면',
+    miniExtend: '+1분',
+    miniStop: '정지',
+    miniCancel: '취소',
+    miniRestart: '재시작',
+    ctrlStop: '정지',
+    ctrlCancel: '취소',
+    ctrlExtend: '끓이는 방법',
+    ctrlChange: '라면 바꾸기',
+    timerStatusStart: '타이머 시작 — ',
+    timerStatusLeft: '남은 시간',
+    timerPaused: '정지했어요',
+    timerCanceled: '취소했어요',
+    timerChange: '변경합니다',
+    timerDone: '다 됐어요! 불기 전에 건져요 🍜',
+    errorServer: '서버 연결 오류 ❌',
+    sendLabel: '전송'
+  },
+  en: {
+    header: '🍜 Ramen AI Assistant',
+    pickerBrandLabel: 'Choose your ramen brand',
+    pickerRamenKeyword: 'Select ramen',
+    inputPlaceholder: 'e.g. Shin Ramyun 4:30 / Cup noodle 3 minutes → 2:50',
+    firstMessage: 'Hi! I’m your 🍜 Ramen AI Assistant. Pick a <b>brand</b> above, or type something like “Shin Ramyun 4:30”.',
+    stickyName: 'Ramen',
+    miniExtend: '+1 min',
+    miniStop: 'Pause',
+    miniCancel: 'Cancel',
+    miniRestart: 'Restart',
+    ctrlStop: 'Pause',
+    ctrlCancel: 'Cancel',
+    ctrlExtend: 'How to cook',
+    ctrlChange: 'Change ramen',
+    timerStatusStart: 'Timer started — ',
+    timerStatusLeft: 'time left',
+    timerPaused: 'Paused',
+    timerCanceled: 'Canceled',
+    timerChange: 'Changing ramen',
+    timerDone: 'Done! Take the noodles out 🍜',
+    errorServer: 'Server connection error ❌',
+    sendLabel: 'Send'
+  }
+};
+
+/* 브랜드 / 라면 표기 변환 */
+const brandLabelMap = {
+  ko: { '농심':'농심','삼양':'삼양','오뚜기':'오뚜기','팔도':'팔도' },
+  en: { '농심':'Nongshim','삼양':'Samyang','오뚜기':'Ottogi','팔도':'Paldo' }
+};
+
+const ramenLabelMap = {
+  ko: {},
+  en: {
+    '신라면':'Shin Ramyun',
+    '신라면 블랙':'Shin Ramyun Black',
+    '얼큰 너구리':'Spicy Neoguri',
+    '너구리':'Neoguri',
+    '안성탕면':'Ansungtangmyun',
+    '해물 안성탕면':'Seafood Ansungtangmyun',
+    '짜파게티':'Chapagetti',
+    '마라짜파게티':'Mara Chapagetti',
+    '배홍동비빔면':'Bae Hong Dong Bibim',
+    '배홍동칼빔면':'Bae Hong Dong Spicy Bibim',
+    '사리면':'Sari Ramyun',
+    '무파마':'Mupama',
+    '건면':'Non-fried Noodles',
+    '오징어짬뽕':'Squid Jjamppong',
+    '둥지냉면':'Nest Cold Noodles',
+    '냉면':'Cold Noodles',
+    '짬뽕면':'Jjamppong Noodles',
+    '해물짬뽕':'Seafood Jjamppong',
+    '메밀소바':'Buckwheat Soba',
+    '김치사발면':'Kimchi Bowl Noodles',
+    '육개장사발면':'Yukgaejang Bowl Noodles',
+    '신라면 툼바':'Shin Ramyun Tumba',
+    '불닭볶음면':'Buldak Stir-fried',
+    '까르보불닭':'Carbonara Buldak',
+    '치즈불닭':'Cheese Buldak',
+    '삼양라면':'Samyang Ramyun',
+    '나가사키 짬뽕':'Nagasaki Jjamppong',
+    '맛있게 매운면':'Tasty Spicy Noodles',
+    '맵탱면':'MaepTaeng Noodles',
+    '진라면(매운맛)':'Jin Ramen (Spicy)',
+    '진라면(순한맛)':'Jin Ramen (Mild)',
+    '열라면':'Yeol Ramen',
+    '참깨라면':'Sesame Ramen',
+    '김치라면':'Kimchi Ramen',
+    '진짬뽕':'Jin Jjamppong',
+    '진짜장':'Jin Jjajang',
+    '쇠고기라면':'Beef Ramen',
+    '북엇국라면':'Dried Pollack Soup Ramen',
+    '컵누들':'Cup Noodle (Low-cal)',
+    '라면사리':'Ramen Noodles (Extra)',
+    '비빔면':'Paldo Bibim Men',
+    '왕뚜껑':'King Lid Cup',
+    '꼬꼬면':'Kkokko Men',
+    '틈새라면':'Teumsae Ramen',
+    'UP 컵왕뚜껑':'UP King Lid Cup',
+    '라볶이':'Rabokki',
+    '남자라면':'Namja Ramen'
+  }
+};
+
+let currentLang = localStorage.getItem('ramenLang') || 'ko';
+
+/* 매운맛 표시용 */
+function isSpicyName(name=''){
+  return /(매운|매운맛|불닭|불|열라면|틈새|맵탱|Spicy)/i.test(name);
+}
+
+/* 언어 적용 */
+function applyLang(){
+  const c = copy[currentLang] || copy.ko;
+
+  document.querySelector('header h1').textContent = c.header;
+  brandLabel.textContent = c.pickerBrandLabel;
+  ramenLabelText.textContent = ' ' + c.pickerRamenKeyword;
+
+  inp.placeholder = c.inputPlaceholder;
+  sendBtn.textContent = c.sendLabel;
+
+  stName.textContent   = c.stickyName;
+  stExtend.textContent = c.miniExtend;
+  stStop.textContent   = c.miniStop;
+  stCancel.textContent = c.miniCancel;
+  stRestart.textContent= c.miniRestart;
+
+  // 언어 토글 버튼 스타일
+  langToggle.querySelectorAll('button').forEach(btn=>{
+    if(btn.dataset.lang === currentLang){
+      btn.style.background = '#0f172a';
+      btn.style.color = '#e5e7eb';
+    }else{
+      btn.style.background = 'transparent';
+      btn.style.color = '#9ca3af';
+    }
+  });
+
+  // 브랜드/라면 칩 다시 그리기
+  if (CATALOG){
+    renderBrands();
+    if (SELECTED_BRAND){
+      renderRamen(SELECTED_BRAND);
+    }
+  }
+
+  const welcome = document.querySelector('.msg[data-role="welcome"] .bubble');
+  if (welcome){
+    welcome.innerHTML = c.firstMessage;
+  }
+
+  updateHeaderHeight();
+}
+
+function setLang(lang){
+  // 타이머 진행/일시정지 중이면 변경 금지
+  if(currentTimer || pausedSnapshot) return;
+  currentLang = lang === 'en' ? 'en' : 'ko';
+  localStorage.setItem('ramenLang', currentLang);
+  applyLang();
+}
+langToggle.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>setLang(btn.dataset.lang));
+});
+
+/* Sticky timer helpers */
+function showSticky(name){
+  stName.textContent=name;
+  sticky.classList.remove('hidden');
+}
+function hideSticky(){
+  sticky.classList.add('hidden');
+}
+function formatMMSS(sec){
+  const m = Math.floor(sec/60), s = sec%60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+function updateSticky(leftSec,totalSec){
+  const per = totalSec>0 ? (1-leftSec/totalSec)*100 : 100;
+  stLeft.textContent = formatMMSS(leftSec);
+  stBar.style.width = Math.max(0,Math.min(100,per)) + '%';
+}
+
+/* 채팅 메시지 */
 function addMsg(html, who='bot'){
   const w = document.createElement('div');
   w.className = `msg ${who}`;
   w.innerHTML = `<div class="bubble">${html}</div>`;
-  chat.appendChild(w); chat.scrollTop = chat.scrollHeight;
+  chat.appendChild(w);
+  chat.scrollTop = chat.scrollHeight;
   return w;
 }
 function typing(on=true){
@@ -136,7 +566,8 @@ function typing(on=true){
   if(on){
     if(t) return;
     const w = document.createElement('div');
-    w.className = 'msg'; w.id = 'typing';
+    w.className = 'msg';
+    w.id = 'typing';
     w.innerHTML = `<div class="bubble"><span class="dots"></span></div>`;
     chat.appendChild(w);
   }else t?.remove();
@@ -144,49 +575,58 @@ function typing(on=true){
 }
 function renderChips(items=[]){
   if(!items.length) return;
-  const box = addMsg(`<div class="chips-box">${items.map(s=>`<button class="chip">${s}</button>`).join(' ')}</div>`);
+  const box = addMsg(
+    `<div class="chips-box">${items.map(s=>`<button class="chip">${s}</button>`).join(' ')}</div>`
+  );
   box.querySelectorAll('.chip').forEach(btn=>{
-    btn.onclick = ()=> { inp.value = btn.textContent; sendBtn.click(); };
+    btn.onclick = ()=>{
+      const txt = btn.textContent.trim();
+      inp.value = txt;
+      sendBtn.click();
+    };
   });
 }
+
+/* API 호출 */
 async function apiParse(text){
-  const r = await fetch('/api/parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
-  const data = await r.json(); if(!r.ok) throw new Error(data?.error||'server'); return data;
+  const r = await fetch('/api/parse',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ text, lang: currentLang })
+  });
+  const data = await r.json();
+  if(!r.ok) throw new Error(data?.error || 'server');
+  return data;
 }
 
 /* 타이머 상태 */
 let currentTimer = null;
-let lastTimerPreset = null;   // { name, seconds }
-let pausedSnapshot = null;    // { name, left, total }
-
-function formatMMSS(sec){
-  const m = Math.floor(sec/60), s = sec%60;
-  return `${m}:${String(s).padStart(2,'0')}`;
-}
+let lastTimerPreset = null;
+let pausedSnapshot  = null;
 
 function updateCountdown(){
   if(!currentTimer) return;
-  const now = Date.now();
+  const now  = Date.now();
   const left = Math.max(0, Math.round((currentTimer.endAt - now)/1000));
-  const total = currentTimer.secsTotal;
+  const total= currentTimer.secsTotal;
   const status = currentTimer.bubbleEl.querySelector('.status');
-  const bar = currentTimer.bubbleEl.querySelector('.meter > i');
+  const bar    = currentTimer.bubbleEl.querySelector('.meter > i');
+  const c = copy[currentLang] || copy.ko;
 
-  status.innerHTML = `⏱️ <b>${currentTimer.name}</b> 남은 시간 <b>${formatMMSS(left)}</b>`;
-  const per = Math.max(0, Math.min(100, (1 - left/total)*100));
+  status.innerHTML = `⏱️ <b>${currentTimer.name}</b> ${c.timerStatusLeft} <b>${formatMMSS(left)}</b>`;
+  const per = Math.max(0,Math.min(100,(1-left/total)*100));
   bar.style.width = per + '%';
 
-  updateSticky(left, total);
+  updateSticky(left,total);
 
   if(left <= 0) finishTimer();
-  else currentTimer.tickHandle = setTimeout(updateCountdown, 250);
+  else currentTimer.tickHandle = setTimeout(updateCountdown,250);
 }
-
 function hideActiveCtrls(b){
   b.querySelector('#btnStop')?.classList.add('hidden');
-  b.querySelector('#btnExtend')?.classList.add('hidden');
   b.querySelector('#btnCancel')?.classList.add('hidden');
   b.querySelector('#btnChange')?.classList.add('hidden');
+  b.querySelector('#btnExtend')?.classList.add('hidden');
 }
 function showRestartCtrls(b){
   const ctrls = b.querySelector('.ctrls');
@@ -194,128 +634,164 @@ function showRestartCtrls(b){
   if(!btn){
     btn = document.createElement('button');
     btn.id = 'btnRestart';
-    btn.textContent = '재시작';
+    btn.textContent = copy[currentLang]?.miniRestart || '재시작';
     btn.onclick = doRestartFromSnapshot;
     ctrls.prepend(btn);
   }else btn.classList.remove('hidden');
 }
 
-/* ▌정지(일시중지) : 진행바/남은시간 그대로 유지 */
-function pauseTimer(reason='정지했어요'){
+/* 끓이는 방법 불러오기 */
+async function showGuideFor(name){
+  typing(true);
+  try {
+    const r = await fetch(
+      `/api/guide?name=${encodeURIComponent(name)}&lang=${currentLang}`
+    );
+    const data = await r.json();
+    typing(false);
+
+    const isEn = currentLang === 'en';
+    const title = `<b>${data.title || name}</b>`;
+    const steps = (data.steps || []).join('<br>');
+    const notes = (data.notes && data.notes.length)
+      ? `<br><span class="muted">${isEn ? 'Tip) ' : '팁) '}${data.notes.join(' · ')}</span>`
+      : '';
+
+    addMsg(`${title}<br>${steps}${notes}`);
+  } catch (e) {
+    typing(false);
+    const c = copy[currentLang] || copy.ko;
+    addMsg(c.errorServer);
+  }
+}
+
+function pauseTimer(){
   if(!currentTimer) return;
   const now  = Date.now();
   const left = Math.max(0, Math.round((currentTimer.endAt - now)/1000));
   const total= currentTimer.secsTotal;
-
   pausedSnapshot = { name: currentTimer.name, left, total };
 
   clearTimeout(currentTimer.handle);
   clearTimeout(currentTimer.tickHandle);
 
   const b = currentTimer.bubbleEl;
-  b.querySelector('.status').innerHTML = `⏸️ <b>${currentTimer.name}</b> ${reason}`;
+  const c = copy[currentLang] || copy.ko;
+  b.querySelector('.status').innerHTML = `⏸️ <b>${currentTimer.name}</b> ${c.timerPaused}`;
   hideActiveCtrls(b); showRestartCtrls(b);
 
-  // sticky에 멈춘 위치 유지 표시
-  updateSticky(left, total);
+  updateSticky(left,total);
   stStop.classList.add('hidden');
   stExtend.classList.add('hidden');
   stCancel.classList.remove('hidden');
   stRestart.classList.remove('hidden');
 
-  currentTimer = null; // 루프 중지
+  currentTimer = null;
 }
+function cancelTimerHard(reasonKey='defaultCancel'){
+  const c = copy[currentLang] || copy.ko;
+  const msg = reasonKey === 'change' ? c.timerChange : c.timerCanceled;
 
-/* ✖ 취소(완전 종료) : 리셋 */
-function cancelTimerHard(reason='취소했어요'){
   if(currentTimer){
     clearTimeout(currentTimer.handle);
     clearTimeout(currentTimer.tickHandle);
     const b = currentTimer.bubbleEl;
-    b.querySelector('.status').innerHTML = `⛔ <b>${currentTimer.name}</b> ${reason}`;
+    b.querySelector('.status').innerHTML = `⛔ <b>${currentTimer.name}</b> ${msg}`;
     hideActiveCtrls(b);
   }
   currentTimer = null;
-  pausedSnapshot = null;    // 재시작 불가
+  pausedSnapshot = null;
   hideSticky();
 
   stStop.classList.remove('hidden');
   stExtend.classList.remove('hidden');
   stRestart.classList.add('hidden');
-}
 
+  if(!currentTimer && !pausedSnapshot){
+    setLangToggleDisabled(false);
+  }
+}
 function extendTimer(sec=60){
   if(!currentTimer) return;
   const now = Date.now();
-  currentTimer.endAt = Math.max(now, currentTimer.endAt) + sec*1000;
+  currentTimer.endAt = Math.max(now,currentTimer.endAt) + sec*1000;
   currentTimer.secsTotal += sec;
   clearTimeout(currentTimer.tickHandle);
   updateCountdown();
 }
-
 function finishTimer(){
   if(!currentTimer) return;
-  addMsg(`✅ <b>${currentTimer.name}</b> 다 됐어요! 불기 전에 건져요 🍜`);
-  try{ ding.currentTime=0; ding.play().catch(()=>{});}catch(e){}
-  // 완료 시에도 마지막 상태를 보여주되 0초/100%로 고정
-  updateSticky(0, 1);
+  const c = copy[currentLang] || copy.ko;
+  addMsg(`✅ <b>${currentTimer.name}</b> ${c.timerDone}`);
+  try{
+    ding.currentTime=0;
+    ding.play().catch(()=>{});
+  }catch(e){}
+  updateSticky(0,1);
   stStop.classList.add('hidden');
   stExtend.classList.add('hidden');
   stRestart.classList.remove('hidden');
   pausedSnapshot = null;
   currentTimer = null;
-}
 
-function startTimer(name, seconds){
-  if(currentTimer) cancelTimerHard('이전 타이머를 종료했어요');
+  if(!currentTimer && !pausedSnapshot){
+    setLangToggleDisabled(false);
+  }
+}
+function startTimer(name,seconds){
+  if(currentTimer) cancelTimerHard('change');
 
   lastTimerPreset = { name, seconds };
+  const c = copy[currentLang] || copy.ko;
 
   const b = addMsg(`
-    <div class="status muted">⏱️ <b>${name}</b> 타이머 시작 — ${formatMMSS(seconds)}</div>
+    <div class="status muted">⏱️ <b>${name}</b> ${c.timerStatusStart}${formatMMSS(seconds)}</div>
     <div class="meter"><i></i></div>
     <div class="ctrls">
-      <button id="btnStop">정지</button>
-      <button id="btnExtend">1분 연장</button>
-      <button id="btnCancel">취소</button>
-      <button id="btnChange">라면 바꾸기</button>
+      <button id="btnStop">${c.ctrlStop}</button>
+      <button id="btnCancel">${c.ctrlCancel}</button>
+      <button id="btnExtend">${c.ctrlExtend}</button>
+      <button id="btnChange">${c.ctrlChange}</button>
     </div>
   `);
-
-  b.querySelector('#btnStop').onclick   = ()=> pauseTimer();
-  b.querySelector('#btnExtend').onclick = ()=> extendTimer(60);
-  b.querySelector('#btnCancel').onclick = ()=> cancelTimerHard();
-  b.querySelector('#btnChange').onclick = ()=> { cancelTimerHard('변경합니다'); window.scrollTo({top:0, behavior:'smooth'}); };
+  b.querySelector('#btnStop').onclick   = ()=>pauseTimer();
+  b.querySelector('#btnCancel').onclick = ()=>cancelTimerHard();
+  b.querySelector('#btnExtend').onclick = ()=>showGuideFor(name);
+  b.querySelector('#btnChange').onclick = ()=>{
+    cancelTimerHard('change');
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
 
   const endAt = Date.now() + seconds*1000;
-  currentTimer = { id: Math.random().toString(36).slice(2),
-    name, endAt,
-    handle: setTimeout(()=>finishTimer(), seconds*1000),
-    bubbleEl: b, secsTotal: seconds, tickHandle: null };
+  currentTimer = {
+    id:Math.random().toString(36).slice(2),
+    name,endAt,
+    handle:setTimeout(()=>finishTimer(),seconds*1000),
+    bubbleEl:b,secsTotal:seconds,tickHandle:null
+  };
 
   showSticky(name);
-  stExtend.onclick = ()=> extendTimer(60);
-  stStop.onclick   = ()=> pauseTimer();
-  stCancel.onclick = ()=> cancelTimerHard();
-  stRestart.onclick= ()=> doRestartFromSnapshot();
+  stExtend.onclick = ()=>extendTimer(60);
+  stStop.onclick   = ()=>pauseTimer();
+  stCancel.onclick = ()=>cancelTimerHard();
+  stRestart.onclick= ()=>doRestartFromSnapshot();
 
   stRestart.classList.add('hidden');
   stStop.classList.remove('hidden');
   stExtend.classList.remove('hidden');
   stCancel.classList.remove('hidden');
 
+  setLangToggleDisabled(true);
   updateCountdown();
 }
-
-/* ▶ 재시작: 정지 스냅샷 우선 사용 */
 function doRestartFromSnapshot(){
-  const name = (pausedSnapshot?.name) || (lastTimerPreset?.name) || '라면';
+  const name = (pausedSnapshot?.name) || (lastTimerPreset?.name) || (copy[currentLang]?.stickyName || '라면');
   const sec  = (pausedSnapshot?.left ?? lastTimerPreset?.seconds ?? 180);
   pausedSnapshot = null;
-  startTimer(name, sec);
+  startTimer(name,sec);
 }
 
-/* 입력 */
+/* 입력 처리 */
 async function handleUser(text){
   addMsg(text,'me');
   typing(true);
@@ -323,57 +799,98 @@ async function handleUser(text){
     const d = await apiParse(text);
     typing(false);
     if(d.reply) addMsg(d.reply);
-    if(Array.isArray(d.suggestions) && d.suggestions.length) renderChips(d.suggestions.slice(0,4));
-    if(d.should_start && d?.name && d?.seconds) startTimer(d.name, d.seconds);
+    if(Array.isArray(d.suggestions) && d.suggestions.length){
+      renderChips(d.suggestions.slice(0,4));
+    }
+    if(d.should_start && d?.name && d?.seconds){
+      startTimer(d.name,d.seconds);
+    }
   }catch(e){
-    typing(false); addMsg('서버 연결 오류 ❌');
+    typing(false);
+    const c = copy[currentLang] || copy.ko;
+    addMsg(c.errorServer);
   }
 }
-sendBtn.onclick=()=>{const t=inp.value.trim();if(!t)return;handleUser(t);inp.value='';};
-inp.addEventListener('keydown',e=>{if(e.key==='Enter')sendBtn.click();});
+sendBtn.onclick = ()=>{
+  const t = inp.value.trim();
+  if(!t) return;
+  handleUser(t);
+  inp.value='';
+};
+inp.addEventListener('keydown',e=>{
+  if(e.key==='Enter') sendBtn.click();
+});
 
-/* 브랜드/라면 */
-let CATALOG=null, SELECTED_BRAND=null;
+/* 브랜드/라면 렌더 */
+let CATALOG = null;
+let SELECTED_BRAND = null;
+
 function renderBrands(){
-  brandRow.innerHTML='';
+  brandRow.innerHTML = '';
+  const labels = brandLabelMap[currentLang] || {};
   Object.keys(CATALOG).forEach(b=>{
-    const btn=document.createElement('button');
-    btn.className='chip'; btn.textContent=b;
-    btn.onclick=()=>{
-      if(SELECTED_BRAND===b && ramenBlock.style.display!=='none'){
-        ramenBlock.style.display='none'; SELECTED_BRAND=null;
-        [...brandRow.children].forEach(c=>c.classList.remove('active')); return;
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.textContent = labels[b] || b;
+    if(SELECTED_BRAND === b) btn.classList.add('active');
+    btn.onclick = ()=>{
+      if(SELECTED_BRAND === b && ramenBlock.style.display !== 'none'){
+        ramenBlock.style.display='none';
+        SELECTED_BRAND=null;
+        [...brandRow.children].forEach(c=>c.classList.remove('active'));
+        return;
       }
-      SELECTED_BRAND=b; renderRamen(b);
+      SELECTED_BRAND = b;
+      renderBrands();
+      renderRamen(b);
       ramenBlock.style.display='block';
-      [...brandRow.children].forEach(c=>c.classList.remove('active'));
-      btn.classList.add('active');
     };
     brandRow.appendChild(btn);
   });
 }
+
 function renderRamen(b){
-  ramenBlock.style.display='block'; brandTitle.textContent=b;
+  ramenBlock.style.display='block';
+  const brandLabels = brandLabelMap[currentLang] || {};
+  brandTitle.textContent = brandLabels[b] || b;
+
+  const ramenLabels = ramenLabelMap[currentLang] || {};
   ramenRow.innerHTML='';
-  CATALOG[b].forEach(it=>{
-    const btn=document.createElement('button');
-    btn.className='chip';
-    btn.textContent=`${it.name} (${it.time})`;
-    btn.onclick=()=> handleUser(`${it.name} ${it.time}`);
+
+  const items = CATALOG[b];
+
+  items.forEach(it=>{
+    const displayName = ramenLabels[it.name] || it.name;
+    const spicy = isSpicyName(it.name);
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.textContent = `${displayName} (${it.time})${spicy ? ' 🌶️' : ''}`;
+    btn.onclick = ()=>handleUser(`${it.name} ${it.time}`);
     ramenRow.appendChild(btn);
   });
 }
+
+/* 카탈로그 로딩 */
 async function loadCatalog(){
   try{
-    const r=await fetch('/api/catalog'); const { catalog }=await r.json();
-    CATALOG=catalog; renderBrands();
-  }catch(e){ console.error(e); }
+    const r = await fetch('/api/catalog');
+    const { catalog } = await r.json();
+    CATALOG = catalog;
+    renderBrands();
+  }catch(e){
+    console.error(e);
+  }
 }
 
-/* init */
-addMsg('안녕하세요! 저는 🍜 라면 AI 비서예요. 먼저 <b>브랜드</b>를 고르거나, 아래에 “신라면 4:30”처럼 말해보세요.');
-if("Notification" in window){ try{ Notification.requestPermission(); }catch(e){} }
+/* 초기화 */
+applyLang();
+const welcomeMsg = addMsg(copy[currentLang].firstMessage);
+welcomeMsg.dataset.role = 'welcome';
+
 loadCatalog();
+updateHeaderHeight();
+window.addEventListener('resize',updateHeaderHeight);
+setLangToggleDisabled(false);
 </script>
 </body>
 </html>
