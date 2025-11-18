@@ -17,33 +17,23 @@
   }
   *{box-sizing:border-box}
   body{
-    margin:0;
-    background:var(--bg);
-    color:var(--txt);
+    margin:0;background:var(--bg);color:var(--txt);
     font-family:Pretendard,system-ui,Apple SD Gothic Neo,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    display:flex;
-    justify-content:center;
+    display:flex;justify-content:center;
   }
   .app{
-    width:100%;
-    max-width:720px;
-    min-height:100dvh;
-    display:flex;
-    flex-direction:column;
+    width:100%;max-width:720px;min-height:100dvh;
+    display:flex;flex-direction:column;
   }
   header{
-    padding:12px 16px;
-    background:var(--card);
+    padding:12px 16px;background:var(--card);
     border-bottom:1px solid #1f2937;
-    position:sticky;
-    top:0;
-    z-index:5;
+    position:sticky;top:0;z-index:5;
   }
   header h1{margin:0;font-size:18px;line-height:1.2}
 
   .chat{
-    flex:1;
-    overflow:auto;
+    flex:1;overflow:auto;
     padding:16px 12px 210px;
     background:var(--panel);
   }
@@ -51,76 +41,51 @@
   .msg .bubble{
     max-width:78%;
     background:var(--muted);
-    padding:12px 14px;
-    border-radius:16px;
-    line-height:1.45;
+    padding:12px 14px;border-radius:16px;line-height:1.45;
   }
   .msg.me{justify-content:flex-end}
   .msg.me .bubble{background:var(--me);color:#0b1220}
 
   footer{
-    position:fixed;
-    left:0;right:0;bottom:0;
+    position:fixed;left:0;right:0;bottom:0;
     background:var(--bg);
     border-top:1px solid #1f2937;
     padding:10px 8px;
   }
   .inputbar{
-    max-width:720px;
-    margin:0 auto;
-    display:flex;
-    gap:8px;
+    max-width:720px;margin:0 auto;
+    display:flex;gap:8px;
   }
   input{
-    flex:1;
-    padding:10px 12px;
-    border-radius:12px;
+    flex:1;padding:10px 12px;border-radius:12px;
     border:1px solid var(--muted);
-    background:var(--bg);
-    color:var(--txt);
+    background:var(--bg);color:var(--txt);
     font-size:13px;
   }
   button{
-    padding:10px 16px;
-    border-radius:12px;
-    border:0;
-    background:var(--me);
-    color:#0b1220;
-    font-weight:700;
-    cursor:pointer;
-    font-size:13px;
+    padding:10px 16px;border-radius:12px;border:0;
+    background:var(--me);color:#0b1220;font-weight:700;
+    cursor:pointer;font-size:13px;
   }
 
   /* 상단 선택 영역 */
   .picker{
-    padding:8px 12px;
-    background:#0b1220;
+    padding:8px 12px;background:#0b1220;
     border-bottom:1px solid #1f2937;
-    position:sticky;
-    top:var(--header-h);
-    z-index:4;
+    position:sticky;top:var(--header-h);z-index:4;
   }
-  .row{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-  }
+  .row{display:flex;flex-wrap:wrap;gap:8px}
   .chip{
-    margin:4px 0;
-    padding:8px 12px;
-    border-radius:999px;
+    margin:4px 0;padding:8px 12px;border-radius:999px;
     border:1px solid var(--muted);
-    background:transparent;
-    color:var(--txt);
-    cursor:pointer;
-    font-size:13px;
+    background:transparent;color:var(--txt);
+    cursor:pointer;font-size:13px;
   }
   .chip:hover{background:#0f172a}
   .chip.active{background:#0f172a}
 
   .chips-box .chip{
-    padding:6px 10px;
-    font-size:12px;
+    padding:6px 10px;font-size:12px;
   }
 
   .dots{display:inline-block;width:1.5em;text-align:left}
@@ -128,97 +93,57 @@
   @keyframes blink{50%{opacity:.3}}
 
   .ctrls{
-    display:flex;
-    gap:8px;
-    margin-top:8px;
-    flex-wrap:wrap;
+    display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;
   }
   .ctrls button{
-    padding:7px 12px;
-    font-size:12px;
-    border-radius:999px;
+    padding:7px 12px;font-size:12px;border-radius:999px;
     border:1px solid var(--muted);
-    background:transparent;
-    color:var(--txt);
+    background:transparent;color:var(--txt);
     cursor:pointer;
-    font-weight:500;
   }
   .ctrls button:hover{background:#0f172a}
 
   .meter{
-    height:6px;
-    background:#0b1220;
+    height:6px;background:#0b1220;
     border:1px solid #1f2937;
-    border-radius:999px;
-    overflow:hidden;
+    border-radius:999px;overflow:hidden;
     margin-top:8px;
   }
-  .meter>i{
-    display:block;
-    height:100%;
-    background:var(--accent);
-    width:0%;
-    transition:width .15s linear;
-  }
+  .meter>i{display:block;height:100%;background:var(--accent);width:0%}
 
   .muted{opacity:.8}
   .hidden{display:none!important}
 
   /* Sticky mini timer */
   .sticky-timer{
-    position:fixed;
-    left:0;right:0;bottom:78px;
-    margin:auto;
-    max-width:720px;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    background:var(--card);
-    color:var(--txt);
-    border:1px solid #1f2937;
-    border-radius:14px;
-    padding:10px 14px;
-    z-index:6;
-    box-shadow:0 4px 20px rgba(0,0,0,.3);
-    font-size:13px;
+    position:fixed;left:0;right:0;bottom:78px;margin:auto;max-width:720px;
+    display:flex;align-items:center;gap:12px;
+    background:var(--card);color:var(--txt);
+    border:1px solid #1f2937;border-radius:14px;
+    padding:10px 14px;z-index:6;
+    box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:13px;
   }
   .sticky-timer.hidden{display:none!important}
   .sticky-timer .name{font-weight:700}
   .sticky-timer .left{
     font-variant-numeric:tabular-nums;
-    min-width:52px;
-    text-align:right;
+    min-width:52px;text-align:right;
   }
-  .sticky-timer .meter{
-    flex:1;
-    height:6px;
-    margin:0 4px;
-  }
+  .sticky-timer .meter{flex:1;height:6px;margin:0 4px}
   .sticky-timer .mini-btn{
-    padding:8px 12px;
-    font-size:12px;
-    border-radius:999px;
+    padding:8px 12px;font-size:12px;border-radius:999px;
     border:1px solid var(--muted);
-    background:transparent;
-    color:var(--txt);
+    background:transparent;color:var(--txt);
     cursor:pointer;
   }
   .sticky-timer .mini-btn:hover{background:#0f172a}
 
   /* 모바일 최적화 */
   @media (max-width:480px){
-    header{
-      padding:10px 10px;
-    }
-    header h1{
-      font-size:16px;
-    }
-    .picker{
-      padding:6px 8px;
-    }
-    .chat{
-      padding:10px 8px 170px;
-    }
+    header{padding:10px 10px;}
+    header h1{font-size:16px;}
+    .picker{padding:6px 8px;}
+    .chat{padding:10px 8px 180px;}
     .msg .bubble{
       max-width:82%;
       padding:10px 11px;
@@ -228,12 +153,8 @@
       padding:6px 10px;
       font-size:12px;
     }
-    footer{
-      padding:8px 6px;
-    }
-    .inputbar{
-      gap:6px;
-    }
+    footer{padding:8px 6px;}
+    .inputbar{gap:6px;}
     input{
       padding:9px 10px;
       font-size:12px;
@@ -243,7 +164,7 @@
       font-size:12px;
     }
     .sticky-timer{
-      bottom:64px;
+      bottom:70px;
       padding:8px 10px;
       gap:8px;
       font-size:12px;
@@ -342,7 +263,7 @@ const stRestart= document.getElementById('stRestart');
 const langToggle = document.getElementById('langToggle');
 const headerEl = document.querySelector('header');
 
-/* 헤더 높이에 맞춰 picker top 보정 */
+/* ───────── 헤더 높이에 맞춰 picker 간격 맞추기 ───────── */
 function updateHeaderHeight(){
   if(!headerEl) return;
   const h = headerEl.getBoundingClientRect().height;
@@ -361,7 +282,9 @@ function setLangToggleDisabled(disabled){
   }
 }
 
-/* 다국어 텍스트 */
+/* ─────────────────────────────
+   다국어 텍스트
+─────────────────────────────*/
 const copy = {
   ko: {
     header: '🍜 라면 AI 비서',
@@ -535,13 +458,8 @@ langToggle.querySelectorAll('button').forEach(btn=>{
 });
 
 /* Sticky timer helpers */
-function showSticky(name){
-  stName.textContent=name;
-  sticky.classList.remove('hidden');
-}
-function hideSticky(){
-  sticky.classList.add('hidden');
-}
+function showSticky(name){ stName.textContent=name; sticky.classList.remove('hidden'); }
+function hideSticky(){ sticky.classList.add('hidden'); }
 function formatMMSS(sec){
   const m = Math.floor(sec/60), s = sec%60;
   return `${m}:${String(s).padStart(2,'0')}`;
@@ -566,8 +484,7 @@ function typing(on=true){
   if(on){
     if(t) return;
     const w = document.createElement('div');
-    w.className = 'msg';
-    w.id = 'typing';
+    w.className = 'msg'; w.id = 'typing';
     w.innerHTML = `<div class="bubble"><span class="dots"></span></div>`;
     chat.appendChild(w);
   }else t?.remove();
@@ -604,6 +521,24 @@ let currentTimer = null;
 let lastTimerPreset = null;
 let pausedSnapshot  = null;
 
+function hideActiveCtrls(b){
+  b.querySelector('#btnStop')?.classList.add('hidden');
+  b.querySelector('#btnCancel')?.classList.add('hidden');
+  b.querySelector('#btnChange')?.classList.add('hidden');
+  b.querySelector('#btnExtend')?.classList.add('hidden');
+}
+function showRestartCtrls(b){
+  const ctrls = b.querySelector('.ctrls');
+  let btn = ctrls.querySelector('#btnRestart');
+  if(!btn){
+    btn = document.createElement('button');
+    btn.id = 'btnRestart';
+    btn.textContent = copy[currentLang]?.miniRestart || '재시작';
+    btn.onclick = doRestartFromSnapshot;
+    ctrls.prepend(btn);
+  }else btn.classList.remove('hidden');
+}
+
 function updateCountdown(){
   if(!currentTimer) return;
   const now  = Date.now();
@@ -621,23 +556,6 @@ function updateCountdown(){
 
   if(left <= 0) finishTimer();
   else currentTimer.tickHandle = setTimeout(updateCountdown,250);
-}
-function hideActiveCtrls(b){
-  b.querySelector('#btnStop')?.classList.add('hidden');
-  b.querySelector('#btnCancel')?.classList.add('hidden');
-  b.querySelector('#btnChange')?.classList.add('hidden');
-  b.querySelector('#btnExtend')?.classList.add('hidden');
-}
-function showRestartCtrls(b){
-  const ctrls = b.querySelector('.ctrls');
-  let btn = ctrls.querySelector('#btnRestart');
-  if(!btn){
-    btn = document.createElement('button');
-    btn.id = 'btnRestart';
-    btn.textContent = copy[currentLang]?.miniRestart || '재시작';
-    btn.onclick = doRestartFromSnapshot;
-    ctrls.prepend(btn);
-  }else btn.classList.remove('hidden');
 }
 
 /* 끓이는 방법 불러오기 */
@@ -688,6 +606,7 @@ function pauseTimer(){
 
   currentTimer = null;
 }
+
 function cancelTimerHard(reasonKey='defaultCancel'){
   const c = copy[currentLang] || copy.ko;
   const msg = reasonKey === 'change' ? c.timerChange : c.timerCanceled;
@@ -711,6 +630,7 @@ function cancelTimerHard(reasonKey='defaultCancel'){
     setLangToggleDisabled(false);
   }
 }
+
 function extendTimer(sec=60){
   if(!currentTimer) return;
   const now = Date.now();
@@ -719,14 +639,12 @@ function extendTimer(sec=60){
   clearTimeout(currentTimer.tickHandle);
   updateCountdown();
 }
+
 function finishTimer(){
   if(!currentTimer) return;
   const c = copy[currentLang] || copy.ko;
   addMsg(`✅ <b>${currentTimer.name}</b> ${c.timerDone}`);
-  try{
-    ding.currentTime=0;
-    ding.play().catch(()=>{});
-  }catch(e){}
+  try{ ding.currentTime=0; ding.play().catch(()=>{});}catch(e){}
   updateSticky(0,1);
   stStop.classList.add('hidden');
   stExtend.classList.add('hidden');
@@ -738,6 +656,7 @@ function finishTimer(){
     setLangToggleDisabled(false);
   }
 }
+
 function startTimer(name,seconds){
   if(currentTimer) cancelTimerHard('change');
 
@@ -754,6 +673,7 @@ function startTimer(name,seconds){
       <button id="btnChange">${c.ctrlChange}</button>
     </div>
   `);
+  // 버튼 순서: 정지 → 취소 → 끓이는 방법 → 라면 바꾸기
   b.querySelector('#btnStop').onclick   = ()=>pauseTimer();
   b.querySelector('#btnCancel').onclick = ()=>cancelTimerHard();
   b.querySelector('#btnExtend').onclick = ()=>showGuideFor(name);
@@ -784,6 +704,7 @@ function startTimer(name,seconds){
   setLangToggleDisabled(true);
   updateCountdown();
 }
+
 function doRestartFromSnapshot(){
   const name = (pausedSnapshot?.name) || (lastTimerPreset?.name) || (copy[currentLang]?.stickyName || '라면');
   const sec  = (pausedSnapshot?.left ?? lastTimerPreset?.seconds ?? 180);
@@ -793,15 +714,37 @@ function doRestartFromSnapshot(){
 
 /* 입력 처리 */
 async function handleUser(text){
+  // 로컬에서도 최소한의 취소/정지/재시작 인텐트 처리(서버 오류 대비)
+  const cancelIntentLocal = /(타이머 ?(취소|꺼)|취소해줘|타이머 꺼줘|cancel (the )?timer|stop (the )?timer)/i.test(text);
+  const pauseIntentLocal  = /(타이머 ?(정지|일시정지)|멈춰줘|잠깐 멈춰|pause (the )?timer)/i.test(text);
+  const resumeIntentLocal = /(다시 시작|재시작|계속해|resume (the )?timer|continue (the )?timer)/i.test(text);
+
+  if (cancelIntentLocal) cancelTimerHard();
+  else if (pauseIntentLocal) pauseTimer();
+  else if (resumeIntentLocal) doRestartFromSnapshot();
+
   addMsg(text,'me');
   typing(true);
   try{
     const d = await apiParse(text);
     typing(false);
+
     if(d.reply) addMsg(d.reply);
     if(Array.isArray(d.suggestions) && d.suggestions.length){
       renderChips(d.suggestions.slice(0,4));
     }
+
+    // 서버가 내려준 타이머 제어
+    if (d.control) {
+      if (d.control === 'cancel') {
+        cancelTimerHard();
+      } else if (d.control === 'pause') {
+        pauseTimer();
+      } else if (d.control === 'resume') {
+        doRestartFromSnapshot();
+      }
+    }
+
     if(d.should_start && d?.name && d?.seconds){
       startTimer(d.name,d.seconds);
     }
@@ -864,7 +807,8 @@ function renderRamen(b){
     const spicy = isSpicyName(it.name);
     const btn = document.createElement('button');
     btn.className = 'chip';
-    btn.textContent = `${displayName} (${it.time})${spicy ? ' 🌶️' : ''}`;
+    // ✅ 이름만 + 맵기 아이콘 (시간 제거)
+    btn.textContent = `${displayName}${spicy ? ' 🌶️' : ''}`;
     btn.onclick = ()=>handleUser(`${it.name} ${it.time}`);
     ramenRow.appendChild(btn);
   });

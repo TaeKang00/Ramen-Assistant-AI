@@ -81,7 +81,7 @@ const RAMEN_CATALOG = {
 // name -> time, spicy, cup
 const FLAT_DB = {};
 const SPICY_DB = {};
-const CUP_DB = {};
+const CUP_DB   = {};
 
 Object.values(RAMEN_CATALOG).flat().forEach(({ name, time, spicy, cup }) => {
   FLAT_DB[name] = time;
@@ -93,7 +93,7 @@ app.get('/api/catalog', (_, res) => {
   res.json({ brands: Object.keys(RAMEN_CATALOG), catalog: RAMEN_CATALOG });
 });
 
-/* 영어 이름 → 한글 이름 매핑 */
+/* ─ 영어 이름 → 한글 이름 매핑 ─ */
 const RAMEN_ALIASES_EN = {
   'Shin Ramyun': '신라면',
   'Shin Ramyun Black': '신라면 블랙',
@@ -451,7 +451,7 @@ const GUIDE_NAMES = Array.from(
   ]),
 );
 
-/* API: 끓이는 방법 (상세) */
+/* ─ API: 끓이는 방법 ─ */
 app.get('/api/guide', (req, res) => {
   const name = String(req.query.name || '').trim();
   const lang = req.query.lang === 'en' ? 'en' : 'ko';
@@ -465,7 +465,24 @@ app.get('/api/guide', (req, res) => {
   return res.json(buildGuideByName(target, lang));
 });
 
-/* 헬스/인덱스 */
+/* 필요시 쓸 수 있는 간단 버전 */
+app.get('/api/guide/quick', (req, res) => {
+  const name = String(req.query.name || '').trim();
+  const lang = req.query.lang === 'en' ? 'en' : 'ko';
+  if (!name) return res.status(400).json({ error: 'name query required' });
+
+  const target =
+    GUIDE_NAMES.find((n) => n === name) ||
+    GUIDE_NAMES.find((n) => n.includes(name)) ||
+    name;
+
+  const g = buildGuideByName(target, lang);
+  res.json({ title: g.title, quick: g.quick, meta: g.meta });
+});
+
+/* ─────────────────────────────────────────────────────────────
+ * 헬스/인덱스
+ * ────────────────────────────────────────────────────────────*/
 app.get('/health', (_, res) =>
   res.json({ ok: true, time: new Date().toISOString() }),
 );
@@ -473,7 +490,7 @@ app.get('/api', (_, res) =>
   res.json({
     ok: true,
     hint:
-      'GET /api/catalog, GET /api/guide?name=신라면, POST /api/parse',
+      'GET /api/catalog, GET /api/guide?name=신라면, GET /api/parse',
   }),
 );
 
@@ -521,7 +538,18 @@ app.post('/api/parse', async (req, res) => {
       return res.status(400).json({ error: 'text required' });
     }
 
-    // "끓이는 방법/레시피" 인텐트면, 서버가 바로 가이드 리턴
+    // 👇 자연어 타이머 제어 인텐트 감지 (서버 측)
+    const cancelIntent = /(타이머 ?(취소|꺼)|취소해줘|타이머 꺼줘|cancel (the )?timer|stop (the )?timer)/i.test(
+      text,
+    );
+    const pauseIntent  = /(타이머 ?(정지|일시정지)|멈춰줘|잠깐 멈춰|pause (the )?timer)/i.test(
+      text,
+    );
+    const resumeIntent = /(다시 시작|재시작|계속해|resume (the )?timer|continue (the )?timer)/i.test(
+      text,
+    );
+
+    // "끓이는 방법/레시피" 인텐트면 LLM 안 타고 바로 처리
     const recipeIntent = /(끓이는 방법|레시피|조리법|how to cook|recipe|instructions?)/i.test(
       text,
     );
@@ -569,10 +597,11 @@ app.post('/api/parse', async (req, res) => {
         reply,
         suggestions,
         should_start: false,
+        control: null,
       });
     }
 
-    // 간단 휴리스틱
+    // 1) 간단 휴리스틱
     const hasTime =
       /(\d+\s*분)|(\d+\s*초)|\d+:\d{1,2}/.test(text) ||
       /(\d+ ?min)|(\d+ ?sec)/i.test(text);
@@ -638,12 +667,13 @@ ${JSON.stringify(CUP_DB, null, 2)}
 
 [Output format – JSON only]
 {
-  "name": string,          // ramen name in Korean (matching DB keys)
-  "seconds": number,       // final timer value in seconds
-  "raw_time_text": string, // raw time phrase extracted from the text, e.g. "3 minutes", "2:50"
-  "reply": string,         // friendly assistant reply in English
-  "suggestions": string[], // 0–5 quick reply suggestions in English
-  "should_start": boolean  // whether to start timer automatically
+  "name": string,
+  "seconds": number,
+  "raw_time_text": string,
+  "reply": string,
+  "suggestions": string[],
+  "should_start": boolean,
+  "control": string | null
 }
 
 Rules:
@@ -652,6 +682,8 @@ Rules:
   - true if there is a clear time expression or a clear ramen name to start with.
   - false for greetings or vague inputs.
   - When in doubt, set to false.
+- control:
+  - Normally null. Use it only if you are *sure* the user explicitly wants to cancel/pause/resume the current timer.
 `
         : `
 [사용자 입력]
@@ -672,12 +704,13 @@ ${JSON.stringify(CUP_DB, null, 2)}
 
 [출력(JSON만)]
 {
-  "name": string,          // 라면 이름(반드시 위 DB에 있는 한글 이름)
+  "name": string,
   "seconds": number,
   "raw_time_text": string,
   "reply": string,
   "suggestions": string[],
-  "should_start": boolean
+  "should_start": boolean,
+  "control": string | null
 }
 
 규칙:
@@ -686,6 +719,9 @@ ${JSON.stringify(CUP_DB, null, 2)}
   - 시간 표현 또는 명확한 라면명이 있으면 true.
   - 인사/모호한 입력이면 false.
   - 애매하면 false.
+- control:
+  - 평소엔 null.
+  - 사용자가 분명히 "타이머 취소/정지/재시작"을 말할 때만 "cancel" / "pause" / "resume"으로 설정해.
 `;
 
     const response = await ai.models.generateContent({
@@ -719,13 +755,16 @@ ${JSON.stringify(CUP_DB, null, 2)}
               maxItems: 5,
             },
             should_start: { type: 'boolean' },
+            control: { type: 'string' },
           },
         },
       },
     });
 
     const raw =
-      typeof response.text === 'function' ? response.text() : response.text;
+      typeof response.text === 'function'
+        ? response.text()
+        : response.text;
     const cleaned = stripJsonFence(raw);
 
     let data;
@@ -737,17 +776,30 @@ ${JSON.stringify(CUP_DB, null, 2)}
       return res.status(422).json({ error: 'parse_failed', raw, cleaned });
     }
 
-    // 후처리/보정
+    // 2) 보정
     data.name = (data.name || '라면').trim();
     data.seconds = Math.max(1, Math.floor(Number(data.seconds) || 240));
     data.raw_time_text = data.raw_time_text || '';
     if (!Array.isArray(data.suggestions)) data.suggestions = [];
     if (typeof data.should_start !== 'boolean')
       data.should_start = shouldStartHeuristic;
+    if (typeof data.control !== 'string') data.control = null;
 
+    // 👇 자연어 인텐트에 따라 control 강제 세팅
+    let control = data.control;
+    if (cancelIntent) control = 'cancel';
+    else if (pauseIntent) control = 'pause';
+    else if (resumeIntent) control = 'resume';
+
+    // cancel / pause / resume 요청이 있으면 새 타이머 자동 시작 막기
+    if (control && data.should_start) {
+      data.should_start = false;
+    }
+
+    // 3) 메모리
     lastContext = { lastName: data.name, lastTimeText: data.raw_time_text };
 
-    return res.json(data);
+    return res.json({ ...data, control });
   } catch (err) {
     console.error('[API ERROR]', err);
     return res
