@@ -529,16 +529,51 @@ function findClosestNameInText(t = '') {
   return null;
 }
 
-app.post('/api/parse', async (req, res) => {
-  try {
-    const { text, lang: rawLang } = req.body ?? {};
-    const lang = rawLang === 'en' ? 'en' : 'ko';
+/* ─ LLM 실패했을 때도 항상 안전한 JSON 리턴 ─ */
+function buildLLMFallback(lang = 'ko') {
+  const isEn = lang === 'en';
+  if (isEn) {
+    return {
+      name: 'ramen',
+      seconds: 240,
+      raw_time_text: '',
+      reply:
+        'The AI server had a small hiccup, but you can still type something like “Shin Ramyun 4:30” and I’ll help you set a timer 😊',
+      suggestions: ['Shin Ramyun 4:30', 'Recommend a ramen'],
+      should_start: false,
+      control: null,
+    };
+  }
+  return {
+    name: '라면',
+    seconds: 240,
+    raw_time_text: '',
+    reply:
+      '지금 AI 서버가 잠깐 불안정해서 정확히 이해하진 못했어요.\n\n그래도 아래에 “신라면 4:30” 처럼 간단히 적어주면 타이머는 계속 도와줄게요 😊',
+    suggestions: ['신라면 4:30', '라면 추천해줘'],
+    should_start: false,
+    control: null,
+  };
+}
 
+/* ─────────────────────────────────────────────────────────────
+ * /api/parse – 인텐트 + 조리법 + Gemini 파싱
+ *  + 에러 나도 항상 200 OK + fallback JSON
+ * ────────────────────────────────────────────────────────────*/
+app.post('/api/parse', async (req, res) => {
+  const { text, lang: rawLang } = req.body ?? {};
+  const lang = rawLang === 'en' ? 'en' : 'ko';
+
+  try {
     if (!text || typeof text !== 'string') {
-      return res.status(400).json({ error: 'text required' });
+      // text 없을 때도 그냥 fallback
+      return res.json(buildLLMFallback(lang));
     }
 
-    // 👇 자연어 타이머 제어 인텐트 감지 (서버 측)
+    /* ─────────────────────────────
+       1) 자연어 타이머 제어 인텐트 감지
+       (원하면 프론트에서만 써도 되지만, 여기 로직은 놔둬도 서버 안 터짐)
+    ──────────────────────────────*/
     const cancelIntent = /(타이머 ?(취소|꺼)|취소해줘|타이머 꺼줘|cancel (the )?timer|stop (the )?timer)/i.test(
       text,
     );
@@ -549,10 +584,58 @@ app.post('/api/parse', async (req, res) => {
       text,
     );
 
-    // "끓이는 방법/레시피" 인텐트면 LLM 안 타고 바로 처리
-    const recipeIntent = /(끓이는 방법|레시피|조리법|how to cook|recipe|instructions?)/i.test(
-      text,
-    );
+    /* 시간/라면 이름 존재 여부 (뒤에서도 씀) */
+    const hasTime =
+      /(\d+\s*분)|(\d+\s*초)|\d+:\d{1,2}/.test(text) ||
+      /(\d+ ?min)|(\d+ ?sec)/i.test(text);
+
+    const matchedNameKorean = Object.keys(FLAT_DB).find((n) => text.includes(n));
+    const matchedName = matchedNameKorean || findClosestNameInText(text);
+
+    /* 👉 타이머 제어만 있는 짧은 입력일 때는
+          Gemini 호출 안 하고 여기서 바로 응답 리턴 */
+    if ((cancelIntent || pauseIntent || resumeIntent) && !hasTime && !matchedName) {
+      const isEn = lang === 'en';
+      const control = cancelIntent ? 'cancel' : pauseIntent ? 'pause' : 'resume';
+
+      let reply;
+      let suggestions;
+
+      if (isEn) {
+        if (control === 'cancel') {
+          reply = 'Okay, I canceled the ramen timer. Tell me which ramen you want to cook next 🍜';
+        } else if (control === 'pause') {
+          reply = 'Paused the ramen timer. Say “resume the timer” when you want to continue.';
+        } else {
+          reply = 'Resumed the ramen timer. I’ll keep counting for you ⏱️';
+        }
+        suggestions = ['Start a new ramen timer', 'Recommend a ramen'];
+      } else {
+        if (control === 'cancel') {
+          reply = '네, 타이머를 취소했어요. 다음에 어떤 라면을 끓일지 알려주시면 다시 도와드릴게요 🍜';
+        } else if (control === 'pause') {
+          reply = '타이머를 일시 정지했어요. 다시 시작하고 싶으면 “타이머 계속”이라고 말씀해 주세요.';
+        } else {
+          reply = '타이머를 다시 시작했어요. 계속 시간을 재 줄게요 ⏱️';
+        }
+        suggestions = ['다른 라면 타이머 시작할까?', '라면 추천해줘'];
+      }
+
+      return res.json({
+        name: lastContext.lastName || '라면',
+        seconds: 240,          // 어차피 should_start = false 라서 의미 없음
+        raw_time_text: '',
+        reply,
+        suggestions,
+        should_start: false,
+        control,
+      });
+    }
+
+    /* ─────────────────────────────
+       2) "끓이는 방법/레시피" 인텐트면 가이드만 리턴
+    ──────────────────────────────*/
+    const recipeIntent = /(끓이는 방법|레시피|조리법|how to cook|recipe|instructions?)/i.test(text);
     if (recipeIntent) {
       const wantDetail = /(자세히|상세|detail|full)/i.test(text);
       const name =
@@ -601,19 +684,13 @@ app.post('/api/parse', async (req, res) => {
       });
     }
 
-    // 1) 간단 휴리스틱
-    const hasTime =
-      /(\d+\s*분)|(\d+\s*초)|\d+:\d{1,2}/.test(text) ||
-      /(\d+ ?min)|(\d+ ?sec)/i.test(text);
-
-    const matchedNameKorean = Object.keys(FLAT_DB).find((n) =>
-      text.includes(n),
-    );
-    const matchedName = matchedNameKorean || findClosestNameInText(text);
-
-    const looksLikeGreeting = /(안녕|안뇽|하이|hello|hi|hey|good (morning|evening)|what'?s up|테스트)/i.test(
-      text,
-    );
+    /* ─────────────────────────────
+       3) 여기부터는 Gemini 로직 (추천/타이머 시작)
+    ──────────────────────────────*/
+    const looksLikeGreeting =
+      /(안녕|안뇽|하이|hello|hi|hey|good (morning|evening)|what'?s up|테스트)/i.test(
+        text,
+      );
     let shouldStartHeuristic = !!(hasTime || matchedName) && !looksLikeGreeting;
 
     const systemKo = `
@@ -661,19 +738,17 @@ ${JSON.stringify(SPICY_DB, null, 2)}
 [Cup noodles (hotel-friendly)]
 ${JSON.stringify(CUP_DB, null, 2)}
 
-[Last context] name=${lastContext.lastName || 'none'}, timeText=${
-            lastContext.lastTimeText || 'none'
-          }
+[Last context] name=${lastContext.lastName || 'none'}, timeText=${lastContext.lastTimeText || 'none'}
 
 [Output format – JSON only]
 {
-  "name": string,
-  "seconds": number,
-  "raw_time_text": string,
-  "reply": string,
-  "suggestions": string[],
-  "should_start": boolean,
-  "control": string | null
+  "name": string,          // ramen name in Korean (matching DB keys)
+  "seconds": number,       // final timer value in seconds
+  "raw_time_text": string, // raw time phrase extracted from the text, e.g. "3 minutes", "2:50"
+  "reply": string,         // friendly assistant reply in English
+  "suggestions": string[], // 0–5 quick reply suggestions in English
+  "should_start": boolean, // whether to start timer automatically
+  "control": string | null // "cancel" | "pause" | "resume" | null
 }
 
 Rules:
@@ -698,19 +773,17 @@ ${JSON.stringify(SPICY_DB, null, 2)}
 [컵라면 여부 (호텔용)]
 ${JSON.stringify(CUP_DB, null, 2)}
 
-[직전 맥락] name=${lastContext.lastName || '없음'}, timeText=${
-            lastContext.lastTimeText || '없음'
-          }
+[직전 맥락] name=${lastContext.lastName || '없음'}, timeText=${lastContext.lastTimeText || '없음'}
 
 [출력(JSON만)]
 {
-  "name": string,
+  "name": string,          // 라면 이름(반드시 위 DB에 있는 한글 이름)
   "seconds": number,
   "raw_time_text": string,
   "reply": string,
   "suggestions": string[],
   "should_start": boolean,
-  "control": string | null
+  "control": string | null // "cancel" | "pause" | "resume" | null
 }
 
 규칙:
@@ -773,10 +846,11 @@ ${JSON.stringify(CUP_DB, null, 2)}
     } catch (e) {
       console.error('[PARSE ERROR] raw:', raw);
       console.error('[PARSE ERROR] cleaned:', cleaned);
-      return res.status(422).json({ error: 'parse_failed', raw, cleaned });
+      // JSON 깨져도 서버는 안 터지고 fallback
+      return res.json(buildLLMFallback(lang));
     }
 
-    // 2) 보정
+    // 보정
     data.name = (data.name || '라면').trim();
     data.seconds = Math.max(1, Math.floor(Number(data.seconds) || 240));
     data.raw_time_text = data.raw_time_text || '';
@@ -785,26 +859,24 @@ ${JSON.stringify(CUP_DB, null, 2)}
       data.should_start = shouldStartHeuristic;
     if (typeof data.control !== 'string') data.control = null;
 
-    // 👇 자연어 인텐트에 따라 control 강제 세팅
+    // 자연어 인텐트가 함께 섞여 있는 긴 문장일 수도 있으니, 여기서도 한 번 더 정리
     let control = data.control;
     if (cancelIntent) control = 'cancel';
     else if (pauseIntent) control = 'pause';
     else if (resumeIntent) control = 'resume';
 
-    // cancel / pause / resume 요청이 있으면 새 타이머 자동 시작 막기
+    // control 명령이 있으면 새 타이머 자동 시작은 막기
     if (control && data.should_start) {
       data.should_start = false;
     }
 
-    // 3) 메모리
     lastContext = { lastName: data.name, lastTimeText: data.raw_time_text };
 
     return res.json({ ...data, control });
   } catch (err) {
     console.error('[API ERROR]', err);
-    return res
-      .status(500)
-      .json({ error: 'server_error', details: err.message });
+    // 여기서도 무조건 200 + fallback
+    return res.json(buildLLMFallback(lang));
   }
 });
 
